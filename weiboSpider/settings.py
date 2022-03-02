@@ -9,6 +9,8 @@
 
 BOT_NAME = 'weiboSpider'
 
+JOBDIR = 'history'
+
 SPIDER_MODULES = ['weiboSpider.spiders']
 NEWSPIDER_MODULE = 'weiboSpider.spiders'
 
