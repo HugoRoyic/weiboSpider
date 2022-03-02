@@ -66,6 +66,7 @@ class WeiboSpider(scrapy.Spider):
                 for line in f:
                     self.start_urls.append(self.user_url.format(line))
 
+
     def random_cookies(self):
         return random.choice(self.cookies)
 
