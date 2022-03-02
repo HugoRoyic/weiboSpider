@@ -4,7 +4,7 @@ from scrapy.http import FormRequest
 import json
 import random
 import js2xml
-from tools import weibo_id_convert
+# from tools import weibo_id_convert
 from weiboSpider.items import *
 
 
@@ -13,30 +13,30 @@ class WeiboSpider(scrapy.Spider):
     allowed_domains = ['weibo.cn']
     start_urls = []
     cookies = [
-        {
+        {   # 137
             'SCF': 'AldouH3y5yKdY4H_8j5SPIE9IyMy7fn6TuSVLr23K7T7gXMvbI8Ucw3YuDay-D6U7fbOUtinn1SVcxTlxgWbR4g.',
             'SUB': '_2A25M4uhuDeRhGeNH7FsT-CvLyDqIHXVsLIgmrDV6PUJbktCOLW78kW1NSmk7doLGbL5aRpws-dfYx5cZQUh8w58m',
             'SUBP': '0033WrSXqPxfM725Ws9jqgMF55529P9D9WhvoqgYh-uOP7__crHo.RbU5NHD95Qf1KM4eonfS0ecWs4Dqcjmi--Xi-zRiK.ci--NiK.fiKyhi--4iKLFi-zci--ci-zfiKnpi--fi-2Xi-2Ni--fi-82i-2cdc9JIgSDqg7t',
             'SSOLoginState': '1642502207', '_T_WM': 'daee613bcfa6b4ac128d115ad5a2a1e4'},
-        {
+        {   # 180
             "_T_WM": "bd4eced8c9026e0e21315ae06722d235",
             "SUB": "_2A25PFnDpDeRhGeFJ71EQ9yjFyTyIHXVs-RChrDV6PUJbktCOLWL7kW1Nf_qZmxcjlFLQe-OgA7kfgXHfCUkK0j-e",
             "SUBP":
             "0033WrSXqPxfM725Ws9jqgMF55529P9D9W5iWa3W4a_nSBhRuJbYDHAW5NHD95QNS0B0eKMc1Kz7Ws4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKeXSozceK.0e5tt",
             "SSOLoginState": "1645347001"},
-        {
+        {   # 方昊宇
             "loginScene": "102003",
             "SUB": "_2A25PFY5SDeRhGeFO6loR9SrNyjSIHXVs-RIarDV6PUJbkdCOLW7bkW1NQZDjOn1PdDWcWg6lEngt26CupLjhPage",
             "_T_WM": "86576543976",
             "MLOGIN": "1",
             "M_WEIBOCN_PARAMS": 'lfid%3D102803%26luicode%3D20000174'},
-        {
+        {   # 党旭东
             "loginScene": "102003",
             "SUB": "_2A25PFmZyDeRhGeBO6FIX8C3EyjiIHXVs-Qo6rDV6PUJbkdAKLWTnkW1NSg48L5u0XlweXj_hbmgCDpDLtUHNJkFW",
             "_T_WM": "40506336635",
             "MLOGIN": "1",
             "M_WEIBOCN_PARAMS": "lfid%3D102803%26luicode%3D20000174"},
-        {
+        {   # 王奇伦
             "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9WW7pHolrIlj3C7o3WVAq70N5NHD95Qce0ecehefSKBpWs4DqcjiBrHAwrSQdcSu",
             "ALF": "1647943972",
             "SUB": "_2A25PFmQnDeRhGeBN6FQR8yvJzz2IHXVs-QxvrDV6PUJbktB-LRX-kW1NRGq-o4AuySEW0WIAwogC7NqqRV-u7XW9",
@@ -44,16 +44,13 @@ class WeiboSpider(scrapy.Spider):
             "_T_WM": "87587616880",
             "WEIBOCN_FROM": "1110006030",
             "MLOGIN": "1",
-            "M_WEIBOCN_PARAMS": "luicode%3D20000174%26uicode%3D20000174"},
-        {
-            "SUB": "_2A25PFmWMDeRhGeBN7FcX8C3Kyj-IHXVsYtBErDV8PUNbmtANLVH8kW9NRDkkV12gfSETOW_EO4PPIjcSweLu-nEW",
-            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9WFZkzWyE-PoqTJlKZr_vk9Z5JpX5KMhUgL.Foq0S0-ceheceKe2dJLoIEjLxKMLBK-L1--LxKBLBonL1h5LxKqLBK5LBoMLxKML1-2L1hxJdNiXUg4L",
-            "ULV": "1642470630439:9:1:1:736933640634.3807.1642470630430:1639613038828",
-            "ALF": "1676888411",
-            "SCF": "Alc2v0IUP-ljqe5Ynhb35YNcl-T5AzM_JEoIhGh9O4M6f_yIRTC7I6rB0zB4-UHbmuLATi9RJhhHCX3C63-aBGw.",
-            "SSOLoginState": "1645352412",
-
-        }]
+            "M_WEIBOCN_PARAMS": "luicode%3D20000174%26luicode%3D20000174"},
+        {   # 冯辰
+            "SUB":"_2A25PEzBQDeRhGeBN7FcX8C3Kyj-IHXVs_FAYrDV6PUJbkdCOLUP8kW1NRDkkV5oMkNALzNkuJEk4ByIpRdC3XX67",
+            "_T_WM":"98126289984",
+            "MLOGIN":"1",
+            "M_WEIBOCN_PARAMS":"lfid%3D102803%26luicode%3D20000174"}
+        ]
 
     ul_path = "user_list.txt"
     user_url = "https://m.weibo.cn/api/container/getIndex?containerid=100505{}"
@@ -179,9 +176,6 @@ class WeiboSpider(scrapy.Spider):
         yield weibo
 
         if weibo["comments"] > 0:
-            # formdata = {"id": weibo["weibo_id"],
-            #             "mid": weibo["weibo_id"],
-            #             "max_id_type": "0"}
             formdata = {"id": weibo["weibo_id"],
                         "page": "1"}
             yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.random_cookies(), formdata=formdata, meta={"formdata": formdata})
@@ -206,9 +200,6 @@ class WeiboSpider(scrapy.Spider):
                 item["like_count"] = comment["like_counts"]
                 yield item
 
-            # max_id = data["max_id"]
-            # if max_id != 0:
-            #     formdata["max_id"] = str(max_id)
             if page < data["max"]:
                 formdata["page"] = str(page + 1)
                 yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.random_cookies(), formdata=formdata, meta={"formdata": formdata})

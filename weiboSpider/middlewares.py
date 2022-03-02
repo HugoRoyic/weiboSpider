@@ -2,14 +2,11 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-import base64
-from urllib.request import Request
-from scrapy import FormRequest, signals
+import time
+from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
-from scrapy.downloadermiddlewares.retry import RetryMiddleware
-from twisted.internet.error import TCPTimedOutError, TimeoutError
 
 
 class WeibospiderSpiderMiddleware:
@@ -81,23 +78,6 @@ class WeibospiderDownloaderMiddleware:
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-
-        # if "detail" in request.url:
-        # if "container" in request.url:
-        #     return
-        # proxy_user_pass = b"ZFE41725212947551145:ia9k6etXHoC4"
-        # encoded_user_pass = base64.encodebytes(proxy_user_pass)
-
-        # request.headers["Proxy-Authorization"] = b"Basic " + encoded_user_pass
-        # request.meta["proxy"] = "http://dyn.horocn.com:50000"
-        # request.headers["Proxy-Authorization"] = b"Basic WkZFNDE3MjUyMTI5NDc1NTExNDU6aWE5azZldFhIb0M0\n"
-        # request.headers["Proxy-Connection"] = "close"
-        # request.headers["Connection"] = "close"
-        # request.dont_filter = True
-        # elif not request.meta.get("proxy"):
-        #     request.meta["proxy"] = get_proxy()
-        # if not request.meta.get("proxy"):
-        #     request.meta["proxy"] = get_proxy()
         return
 
     def process_response(self, request, response, spider):
@@ -106,12 +86,18 @@ class WeibospiderDownloaderMiddleware:
         # - return a Response object
         # - return a Request object
         # - or raise IgnoreRequest
-        # if response.status == 403:
-        #     if "max_id" in request.url:
-        #         request.url = request.url.split("max_id")[0]
-        #     proxy = request.meta["proxy"]
-        #     request.meta["proxy"] = get_proxy()
-        #     proxy_pool.add(proxy)
+        count = 0
+
+        def count_403():
+            nonlocal count
+            count += 1
+            if count % 10 == 0:
+                time.sleep(300)
+                count = 0
+
+        if response.status == 403:
+            count_403()
+        #
         #     return request
 
         return response
