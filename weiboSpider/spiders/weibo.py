@@ -1,5 +1,5 @@
 import scrapy
-from scrapy.http import FormRequest
+from scrapy.http import Request, FormRequest
 
 import json
 import random
@@ -12,7 +12,7 @@ class WeiboSpider(scrapy.Spider):
     name = 'weibo'
     allowed_domains = ['weibo.cn']
     start_urls = []
-    cookies = [
+    _cookies = [
         {   # 137
             'SCF': 'AldouH3y5yKdY4H_8j5SPIE9IyMy7fn6TuSVLr23K7T7gXMvbI8Ucw3YuDay-D6U7fbOUtinn1SVcxTlxgWbR4g.',
             'SUB': '_2A25M4uhuDeRhGeNH7FsT-CvLyDqIHXVsLIgmrDV6PUJbktCOLW78kW1NSmk7doLGbL5aRpws-dfYx5cZQUh8w58m',
@@ -46,11 +46,11 @@ class WeiboSpider(scrapy.Spider):
             "MLOGIN": "1",
             "M_WEIBOCN_PARAMS": "luicode%3D20000174%26luicode%3D20000174"},
         {   # 冯辰
-            "SUB":"_2A25PEzBQDeRhGeBN7FcX8C3Kyj-IHXVs_FAYrDV6PUJbkdCOLUP8kW1NRDkkV5oMkNALzNkuJEk4ByIpRdC3XX67",
-            "_T_WM":"98126289984",
-            "MLOGIN":"1",
-            "M_WEIBOCN_PARAMS":"lfid%3D102803%26luicode%3D20000174"}
-        ]
+            "SUB": "_2A25PEzBQDeRhGeBN7FcX8C3Kyj-IHXVs_FAYrDV6PUJbkdCOLUP8kW1NRDkkV5oMkNALzNkuJEk4ByIpRdC3XX67",
+            "_T_WM": "98126289984",
+            "MLOGIN": "1",
+            "M_WEIBOCN_PARAMS": "lfid%3D102803%26luicode%3D20000174"}
+    ]
 
     ul_path = "user_list.txt"
     user_url = "https://m.weibo.cn/api/container/getIndex?containerid=100505{}"
@@ -61,18 +61,21 @@ class WeiboSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.start_urls = self.get_start_urls()
+
+    def get_start_urls(self):
         if self.ul_path:
             with open(self.ul_path, "r") as f:
-                for line in f:
-                    self.start_urls.append(self.user_url.format(line))
+                return [self.user_url.format(line) for line in f]
+        return []
 
-
-    def random_cookies(self):
-        return random.choice(self.cookies)
+    @property
+    def cookies(self):
+        return random.choice(self._cookies)
 
     def start_requests(self):
         for url in self.start_urls:
-            yield FormRequest(url, callback=self.parse_user, method="GET", cookies=self.cookies)
+            yield Request(url, callback=self.parse_user, cookies=self.cookies)
 
     def parse_user(self, response):
         datapack = json.loads(response.body)
@@ -94,9 +97,9 @@ class WeiboSpider(scrapy.Spider):
             user["followers_count"] = userInfo.get("followers_count")   # 粉丝数
 
             url = self.user_url_addition.format(user["user_id"])
-            yield FormRequest(url, callback=self.parse_user_addition, method="GET", cookies=self.random_cookies(), meta={"item": user}, dont_filter=True)
+            yield Request(url, callback=self.parse_user_addition, cookies=self.cookies, meta={"item": user}, dont_filter=True)
         else:
-            yield FormRequest(response.url, callback=self.parse_user, method="GET", dont_filter=True)
+            yield Request(response.url, callback=self.parse_user, dont_filter=True)
 
     def parse_user_addition(self, response):
         datapack = json.loads(response.body)
@@ -116,13 +119,13 @@ class WeiboSpider(scrapy.Spider):
             yield user
 
             url = self.weibo_url.format(user["user_id"])
-            yield FormRequest(url, callback=self.parse_weibo, method="GET", cookies=self.random_cookies())
+            yield Request(url, callback=self.parse_weibo, cookies=self.cookies)
 
     def parse_weibo(self, response):
         wid_list = response.css("div.c[id]::attr(id)").getall()
         for wid in wid_list:
             url = self.weibo_detail_url.format(wid.lstrip("M_"))
-            yield FormRequest(url, callback=self.parse_weibo_detail, method="GET")
+            yield Request(url, callback=self.parse_weibo_detail)
 
         next = response.css("div.pa a::attr(href)").get()
         yield response.follow(next, callback=self.parse_weibo)
@@ -134,52 +137,52 @@ class WeiboSpider(scrapy.Spider):
             status = xml.cssselect("property[name='status']")[0]
             data = js2xml.jsonlike.make_dict(status)[1]
         except IndexError:
-            yield FormRequest(response.url, callback=self.parse_weibo_detail, method="GET")
-            return
-        weibo = WeiboItem()
+            yield Request(response.url, callback=self.parse_weibo_detail)
+        else:
+            weibo = WeiboItem()
 
-        weibo["user_id"] = data["user"]["id"]
-        weibo["weibo_id"] = data.get("id")
-        weibo["text"] = data.get("text")
-        if data.get("pics"):
-            pics = data["pics"]
-            weibo["img"] = ','.join(pic["large"]["url"] for pic in pics)
-        # weibo["video"] = info.get("pics")
-        # weibo["locate"] =
-        weibo["created_at"] = data.get("created_at")
-        weibo["tool"] = data.get("source")
-        weibo["reposts"] = data.get("reposts_count")
-        weibo["comments"] = data.get("comments_count")
-        weibo["attitudes"] = data.get("attitudes_count")
-        weibo["original"] = True
+            weibo["user_id"] = data["user"]["id"]
+            weibo["weibo_id"] = data.get("id")
+            weibo["text"] = data.get("text")
+            if data.get("pics"):
+                pics = data["pics"]
+                weibo["img"] = ','.join(pic["large"]["url"] for pic in pics)
+            # weibo["video"] = info.get("pics")
+            # weibo["locate"] =
+            weibo["created_at"] = data.get("created_at")
+            weibo["tool"] = data.get("source")
+            weibo["reposts"] = data.get("reposts_count")
+            weibo["comments"] = data.get("comments_count")
+            weibo["attitudes"] = data.get("attitudes_count")
+            weibo["original"] = True
 
-        retweet = data.get("retweeted_status")
-        if retweet:
-            weibo["original"] = False
-            user = retweet.get("user")
-            if not user:
-                return
-            weibo["ouid"] = user.get("id")
-            weibo["owid"] = retweet.get("id")
-            if retweet.get("isLongText"):
-                weibo["otext"] = retweet.get("longText", {}).get("longTextContent")
-            else:
-                weibo["otext"] = retweet.get("text")
-            if retweet.get("pics"):
-                weibo["oimg"] = '.'.join(pic["large"]["url"] for pic in retweet.get("pics"))
-            # weibo["ovideo"] =
-            weibo["odate"] = retweet.get("created_at")
-            weibo["otool"] = retweet.get("source")
-            weibo["oreposts"] = retweet.get("reposts_count")
-            weibo["ocomments"] = retweet.get("comments_count")
-            weibo["oattitudes"] = retweet.get("attitudes_count")
+            retweet = data.get("retweeted_status")
+            if retweet:
+                weibo["original"] = False
+                user = retweet.get("user")
+                if not user:
+                    return
+                weibo["ouid"] = user.get("id")
+                weibo["owid"] = retweet.get("id")
+                if retweet.get("isLongText"):
+                    weibo["otext"] = retweet.get("longText", {}).get("longTextContent")
+                else:
+                    weibo["otext"] = retweet.get("text")
+                if retweet.get("pics"):
+                    weibo["oimg"] = '.'.join(pic["large"]["url"] for pic in retweet.get("pics"))
+                # weibo["ovideo"] =
+                weibo["odate"] = retweet.get("created_at")
+                weibo["otool"] = retweet.get("source")
+                weibo["oreposts"] = retweet.get("reposts_count")
+                weibo["ocomments"] = retweet.get("comments_count")
+                weibo["oattitudes"] = retweet.get("attitudes_count")
 
-        yield weibo
+            yield weibo
 
-        if weibo["comments"] > 0:
-            formdata = {"id": weibo["weibo_id"],
-                        "page": "1"}
-            yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.random_cookies(), formdata=formdata, meta={"formdata": formdata})
+            if weibo["comments"] > 0:
+                formdata = {"id": weibo["weibo_id"],
+                            "page": "1"}
+                yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.cookies, formdata=formdata, meta={"formdata": formdata})
 
     def parse_comment(self, response):
         formdata = response.meta["formdata"]
@@ -203,6 +206,6 @@ class WeiboSpider(scrapy.Spider):
 
             if page < data["max"]:
                 formdata["page"] = str(page + 1)
-                yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.random_cookies(), formdata=formdata, meta={"formdata": formdata})
+                yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.cookies, formdata=formdata, meta={"formdata": formdata})
         else:
-            yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.random_cookies(), formdata=formdata)
+            yield FormRequest(self.comment_url, callback=self.parse_comment, method="GET", cookies=self.cookies, formdata=formdata)

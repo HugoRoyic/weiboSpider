@@ -8,11 +8,11 @@
 from itemadapter import ItemAdapter
 import sqlite3
 from .items import UserItem, WeiboItem, CommentItem
-
+from settings import SQLITE_PATH
 
 class WeibospiderPipeline:
     def __init__(self):
-        self.con = sqlite3.connect("weibo.db")
+        self.con = sqlite3.connect(SQLITE_PATH)
         self.cur = self.con.cursor()
         self.create_table()
 
