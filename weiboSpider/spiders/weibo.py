@@ -2,6 +2,8 @@ import scrapy
 from scrapy.http import Request, FormRequest
 
 import json
+import redis
+import sqlite3
 import random
 import js2xml
 # from tools import weibo_id_convert
@@ -62,6 +64,14 @@ class WeiboSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = self.get_start_urls()
+        self.cache = redis.StrictRedis(host='localhost', port=6379)
+
+        # 将已爬取的结果导入redis
+        self.connection = sqlite3.connect(self.settings.SQLITE_PATH)
+        cursor = self.connection.cursor()
+        rows = cursor.execute("SELECT weibo_id FROM WEIBO")
+        for row in rows:
+            self.cache.sadd('weibo_id', row[0])
 
     def get_start_urls(self):
         if self.ul_path:
@@ -124,8 +134,10 @@ class WeiboSpider(scrapy.Spider):
     def parse_weibo(self, response):
         wid_list = response.css("div.c[id]::attr(id)").getall()
         for wid in wid_list:
-            url = self.weibo_detail_url.format(wid.lstrip("M_"))
-            yield Request(url, callback=self.parse_weibo_detail)
+            weibo_id = wid.lstrip("M_")
+            if not self.cache.sismember('weibo_id', weibo_id):
+                url = self.weibo_detail_url.format(weibo_id)
+                yield Request(url, callback=self.parse_weibo_detail)
 
         next = response.css("div.pa a::attr(href)").get()
         yield response.follow(next, callback=self.parse_weibo)
@@ -140,9 +152,10 @@ class WeiboSpider(scrapy.Spider):
             yield Request(response.url, callback=self.parse_weibo_detail)
         else:
             weibo = WeiboItem()
+            weibo_id = data.get("id")
 
             weibo["user_id"] = data["user"]["id"]
-            weibo["weibo_id"] = data.get("id")
+            weibo["weibo_id"] = weibo_id
             weibo["text"] = data.get("text")
             if data.get("pics"):
                 pics = data["pics"]
@@ -177,6 +190,7 @@ class WeiboSpider(scrapy.Spider):
                 weibo["ocomments"] = retweet.get("comments_count")
                 weibo["oattitudes"] = retweet.get("attitudes_count")
 
+            self.cache.sadd('weibo_id', weibo_id)
             yield weibo
 
             if weibo["comments"] > 0:
