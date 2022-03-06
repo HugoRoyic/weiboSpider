@@ -3,7 +3,7 @@ from scrapy.http import Request, FormRequest
 
 import json
 import redis
-import sqlite3
+# import sqlite3
 import random
 import js2xml
 # from tools import weibo_id_convert
@@ -63,18 +63,24 @@ class WeiboSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.start_urls = self.get_start_urls()
         self.cache = redis.StrictRedis(host='localhost', port=6379)
+        self.start_urls = self.get_start_urls()
+
 
         # 将已爬取的结果导入redis
-        self.connection = sqlite3.connect(self.settings.SQLITE_PATH)
-        cursor = self.connection.cursor()
-        rows = cursor.execute("SELECT weibo_id FROM WEIBO")
-        for row in rows:
-            self.cache.sadd('weibo_id', row[0])
+        # self.connection = sqlite3.connect(self.settings.SQLITE_PATH)
+        # cursor = self.connection.cursor()
+        # rows = cursor.execute("SELECT weibo_id FROM WEIBO")
+        # for row in rows:
+        #     self.cache.sadd('weibo_id', row[0])
 
     def get_start_urls(self):
-        if self.ul_path:
+        if self.cache.exists('user_id'):
+            self.init_parser = self.parse_weibo
+            user_set = self.cache.smembers('user_id')
+            return [self.weibo_url.format(uid.decode()) for uid in user_set]
+        elif self.ul_path:
+            self.init_parser = self.parse_user
             with open(self.ul_path, "r") as f:
                 return [self.user_url.format(line) for line in f]
         return []
@@ -85,7 +91,7 @@ class WeiboSpider(scrapy.Spider):
 
     def start_requests(self):
         for url in self.start_urls:
-            yield Request(url, callback=self.parse_user, cookies=self.cookies)
+            yield Request(url, callback=self.init_parser, cookies=self.cookies)
 
     def parse_user(self, response):
         datapack = json.loads(response.body)
@@ -140,7 +146,8 @@ class WeiboSpider(scrapy.Spider):
                 yield Request(url, callback=self.parse_weibo_detail)
 
         next = response.css("div.pa a::attr(href)").get()
-        yield response.follow(next, callback=self.parse_weibo)
+        if next is not None:
+            yield response.follow(next, callback=self.parse_weibo)
 
     def parse_weibo_detail(self, response):
         try:

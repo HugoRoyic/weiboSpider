@@ -8,7 +8,7 @@
 from itemadapter import ItemAdapter
 import sqlite3
 from .items import UserItem, WeiboItem, CommentItem
-from settings import SQLITE_PATH
+from .settings import SQLITE_PATH
 
 class WeibospiderPipeline:
     def __init__(self):
