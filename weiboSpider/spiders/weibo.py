@@ -3,7 +3,6 @@ from scrapy.http import Request, FormRequest
 
 import json
 import redis
-# import sqlite3
 import random
 import js2xml
 # from tools import weibo_id_convert
@@ -21,17 +20,15 @@ class WeiboSpider(scrapy.Spider):
             'SUBP': '0033WrSXqPxfM725Ws9jqgMF55529P9D9WhvoqgYh-uOP7__crHo.RbU5NHD95Qf1KM4eonfS0ecWs4Dqcjmi--Xi-zRiK.ci--NiK.fiKyhi--4iKLFi-zci--ci-zfiKnpi--fi-2Xi-2Ni--fi-82i-2cdc9JIgSDqg7t',
             'SSOLoginState': '1642502207', '_T_WM': 'daee613bcfa6b4ac128d115ad5a2a1e4'},
         {   # 180
-            "_T_WM": "bd4eced8c9026e0e21315ae06722d235",
-            "SUB": "_2A25PFnDpDeRhGeFJ71EQ9yjFyTyIHXVs-RChrDV6PUJbktCOLWL7kW1Nf_qZmxcjlFLQe-OgA7kfgXHfCUkK0j-e",
-            "SUBP":
-            "0033WrSXqPxfM725Ws9jqgMF55529P9D9W5iWa3W4a_nSBhRuJbYDHAW5NHD95QNS0B0eKMc1Kz7Ws4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKeXSozceK.0e5tt",
-            "SSOLoginState": "1645347001"},
+            "_T_WM": "7734f5a8c9131a4dbe3fb4fddf885f4a",
+            "SUB": "_2A25PIctFDeRhGeFJ71EQ9yjFyTyIHXVs7dUNrDV6PUJbktCOLWbnkW1Nf_qZm15UYA6A98DIjxnLp_2UzUb7LDjj",
+            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9W5iWa3W4a_nSBhRuJbYDHAW5NHD95QNS0B0eKMc1Kz7Ws4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKeXSozceK.0e5tt",
+            "SSOLoginState": "1646639894"},
         {   # 方昊宇
-            "loginScene": "102003",
-            "SUB": "_2A25PFY5SDeRhGeFO6loR9SrNyjSIHXVs-RIarDV6PUJbkdCOLW7bkW1NQZDjOn1PdDWcWg6lEngt26CupLjhPage",
-            "_T_WM": "86576543976",
-            "MLOGIN": "1",
-            "M_WEIBOCN_PARAMS": 'lfid%3D102803%26luicode%3D20000174'},
+            " _T_WM": "709888edc8d10d578cce01d2ddfeaf32",
+            "SCF": "Auzdtr4Cp9F13W4G0RJ8jRHjWW8moZ67xey2nv9sf8Be6Ze34pTxwXP1xTFu9oVLMUXvQ8HrrP4VBNlpj2zd-eU.",
+            "SUB": "_2A25PIchDDeRhGeFO6loR9SrNyjSIHXVs7egLrDV6PUJbktAKLVDTkW1NQZDjOgovm9XFJEimkhAaP7Xe4rQ0UyVj",
+            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9WFywXi_dXxgq1X42BH-CruI5NHD95QNeh2Reh-XeK2RWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNS05p1h5fSh2p15tt"},
         {   # 党旭东
             "loginScene": "102003",
             "SUB": "_2A25PFmZyDeRhGeBO6FIX8C3EyjiIHXVs-Qo6rDV6PUJbkdAKLWTnkW1NSg48L5u0XlweXj_hbmgCDpDLtUHNJkFW",
@@ -65,7 +62,6 @@ class WeiboSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.cache = redis.StrictRedis(host='localhost', port=6379)
         self.start_urls = self.get_start_urls()
-
 
         # 将已爬取的结果导入redis
         # self.connection = sqlite3.connect(self.settings.SQLITE_PATH)
