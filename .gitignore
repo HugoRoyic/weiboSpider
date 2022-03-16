@@ -6,6 +6,12 @@ history/
 *.rdb
 *.aof
 stdout
+redis-weibo.conf
+
+# python debug
+*.ipynb
+user_list.txt
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
