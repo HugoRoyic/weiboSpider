@@ -1,11 +1,10 @@
 import scrapy
-from scrapy.http import Request, FormRequest
+from scrapy import Request, FormRequest
 
-import json
 import redis
 import random
 import js2xml
-# from tools import weibo_id_convert
+from cookies import COOKIES
 from weiboSpider.items import *
 
 
@@ -13,43 +12,7 @@ class WeiboSpider(scrapy.Spider):
     name = 'weibo'
     allowed_domains = ['weibo.cn']
     start_urls = []
-    _cookies = [
-        {   # 137
-            'SCF': 'AldouH3y5yKdY4H_8j5SPIE9IyMy7fn6TuSVLr23K7T7gXMvbI8Ucw3YuDay-D6U7fbOUtinn1SVcxTlxgWbR4g.',
-            'SUB': '_2A25M4uhuDeRhGeNH7FsT-CvLyDqIHXVsLIgmrDV6PUJbktCOLW78kW1NSmk7doLGbL5aRpws-dfYx5cZQUh8w58m',
-            'SUBP': '0033WrSXqPxfM725Ws9jqgMF55529P9D9WhvoqgYh-uOP7__crHo.RbU5NHD95Qf1KM4eonfS0ecWs4Dqcjmi--Xi-zRiK.ci--NiK.fiKyhi--4iKLFi-zci--ci-zfiKnpi--fi-2Xi-2Ni--fi-82i-2cdc9JIgSDqg7t',
-            'SSOLoginState': '1642502207', '_T_WM': 'daee613bcfa6b4ac128d115ad5a2a1e4'},
-        {   # 180
-            "_T_WM": "7734f5a8c9131a4dbe3fb4fddf885f4a",
-            "SUB": "_2A25PIctFDeRhGeFJ71EQ9yjFyTyIHXVs7dUNrDV6PUJbktCOLWbnkW1Nf_qZm15UYA6A98DIjxnLp_2UzUb7LDjj",
-            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9W5iWa3W4a_nSBhRuJbYDHAW5NHD95QNS0B0eKMc1Kz7Ws4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKeXSozceK.0e5tt",
-            "SSOLoginState": "1646639894"},
-        {   # 方昊宇
-            " _T_WM": "709888edc8d10d578cce01d2ddfeaf32",
-            "SCF": "Auzdtr4Cp9F13W4G0RJ8jRHjWW8moZ67xey2nv9sf8Be6Ze34pTxwXP1xTFu9oVLMUXvQ8HrrP4VBNlpj2zd-eU.",
-            "SUB": "_2A25PIchDDeRhGeFO6loR9SrNyjSIHXVs7egLrDV6PUJbktAKLVDTkW1NQZDjOgovm9XFJEimkhAaP7Xe4rQ0UyVj",
-            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9WFywXi_dXxgq1X42BH-CruI5NHD95QNeh2Reh-XeK2RWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNS05p1h5fSh2p15tt"},
-        {   # 党旭东
-            "loginScene": "102003",
-            "SUB": "_2A25PFmZyDeRhGeBO6FIX8C3EyjiIHXVs-Qo6rDV6PUJbkdAKLWTnkW1NSg48L5u0XlweXj_hbmgCDpDLtUHNJkFW",
-            "_T_WM": "40506336635",
-            "MLOGIN": "1",
-            "M_WEIBOCN_PARAMS": "lfid%3D102803%26luicode%3D20000174"},
-        {   # 王奇伦
-            "SUBP": "0033WrSXqPxfM725Ws9jqgMF55529P9D9WW7pHolrIlj3C7o3WVAq70N5NHD95Qce0ecehefSKBpWs4DqcjiBrHAwrSQdcSu",
-            "ALF": "1647943972",
-            "SUB": "_2A25PFmQnDeRhGeBN6FQR8yvJzz2IHXVs-QxvrDV6PUJbktB-LRX-kW1NRGq-o4AuySEW0WIAwogC7NqqRV-u7XW9",
-            "SSOLoginState": "1645352055",
-            "_T_WM": "87587616880",
-            "WEIBOCN_FROM": "1110006030",
-            "MLOGIN": "1",
-            "M_WEIBOCN_PARAMS": "luicode%3D20000174%26luicode%3D20000174"},
-        {   # 冯辰
-            "SUB": "_2A25PEzBQDeRhGeBN7FcX8C3Kyj-IHXVs_FAYrDV6PUJbkdCOLUP8kW1NRDkkV5oMkNALzNkuJEk4ByIpRdC3XX67",
-            "_T_WM": "98126289984",
-            "MLOGIN": "1",
-            "M_WEIBOCN_PARAMS": "lfid%3D102803%26luicode%3D20000174"}
-    ]
+    _cookies = COOKIES
 
     ul_path = "user_list.txt"
     user_url = "https://m.weibo.cn/api/container/getIndex?containerid=100505{}"
@@ -90,7 +53,7 @@ class WeiboSpider(scrapy.Spider):
             yield Request(url, callback=self.init_parser, cookies=self.cookies)
 
     def parse_user(self, response):
-        datapack = json.loads(response.body)
+        datapack = response.json()
         if datapack["ok"]:
             data = datapack.get("data")
             userInfo = data.get("userInfo")
@@ -114,7 +77,7 @@ class WeiboSpider(scrapy.Spider):
             yield Request(response.url, callback=self.parse_user, dont_filter=True)
 
     def parse_user_addition(self, response):
-        datapack = json.loads(response.body)
+        datapack = response.json()
         if datapack["ok"]:
             data = datapack.get("data")
             cards = sum([card["card_group"] for card in data["cards"]], [])
@@ -203,7 +166,7 @@ class WeiboSpider(scrapy.Spider):
 
     def parse_comment(self, response):
         formdata = response.meta["formdata"]
-        datapack = json.loads(response.body)
+        datapack = response.json()
         if datapack["ok"]:
             data = datapack["data"]
             weibo_id = formdata["id"]
